@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TenderHub — проверка API</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 40px; }
+    .box { border:1px solid #ddd; border-radius:12px; padding:16px; margin:12px 0; }
+    button { padding:8px 12px; border-radius:8px; border:1px solid #999; cursor:pointer; }
+    code { background:#f6f8fa; padding:2px 6px; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <h1>TenderHub — стартовая проверка</h1>
+
+  <div class="box">
+    <h3>1) Лоты</h3>
+    <p><button id="btnLots">GET /api/lots/search</button></p>
+    <pre id="outLots">—</pre>
+  </div>
+
+  <div class="box">
+    <h3>2) Telegram</h3>
+    <p><button id="btnTg">POST /api/tg/link → deeplink</button></p>
+    <div id="outTg">—</div>
+  </div>
+
+  <script>
+    function getToken() {
+      const k = 'tenderhub_tg_token';
+      let t = localStorage.getItem(k);
+      if (!t) { t = Math.random().toString(36).slice(2,10).toUpperCase(); localStorage.setItem(k,t); }
+      return t;
+    }
+    document.getElementById('btnLots').onclick = async () => {
+      const r = await fetch('/api/lots/search');
+      const j = await r.json().catch(()=>({}));
+      document.getElementById('outLots').textContent = JSON.stringify(j, null, 2);
+    };
+    document.getElementById('btnTg').onclick = async () => {
+      try {
+        const r = await fetch('/api/tg/link', {
+          method:'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ token: getToken() })
+        });
+        const j = await r.json();
+        const link = j?.link || '#';
+        document.getElementById('outTg').innerHTML = link === '#'
+          ? 'Не удалось получить ссылку'
+          : `Ссылка: <a href="${link}" target="_blank" rel="noreferrer">${link}</a>`;
+      } catch {
+        document.getElementById('outTg').textContent = 'Ошибка запроса';
+      }
+    };
+  </script>
+</body>
+</html>
