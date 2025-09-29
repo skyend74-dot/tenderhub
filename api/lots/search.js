@@ -1,7 +1,24 @@
-// api/lots/search.js
-export const runtime = 'edge'; // Edge Function
+// api/lots/search.ts
+export const config = { runtime: 'edge' as const };  // <-- главное изменение
 
-const MOCK_LOTS = [
+type LotStatus = 'open' | 'closed' | 'awarded' | 'cancelled' | 'unknown';
+type Lot = {
+  id: string;
+  source: 'etender' | 'xarid';
+  url: string;
+  title: string;
+  description: string;
+  category: string;
+  buyer: string;
+  region: string;
+  budget_amount: number;
+  currency: 'UZS' | 'USD' | 'EUR';
+  bid_deadline_at: string;
+  published_at: string;
+  status: LotStatus;
+};
+
+const MOCK_LOTS: Lot[] = [
   {
     id: 'L-1001',
     source: 'etender',
@@ -11,7 +28,7 @@ const MOCK_LOTS = [
     category: 'Авто и шины',
     buyer: 'МВД РУз',
     region: 'Ташкент',
-    budget_amount: 950000000,
+    budget_amount: 950_000_000,
     currency: 'UZS',
     bid_deadline_at: new Date(Date.now() + 1000 * 60 * 60 * 28).toISOString(),
     published_at: new Date(Date.now() - 1000 * 60 * 60 * 20).toISOString(),
@@ -26,7 +43,7 @@ const MOCK_LOTS = [
     category: 'Пожарная безопасность',
     buyer: 'Министерство по ЧС',
     region: 'Самарканд',
-    budget_amount: 320000000,
+    budget_amount: 320_000_000,
     currency: 'UZS',
     bid_deadline_at: new Date(Date.now() + 1000 * 60 * 60 * 6).toISOString(),
     published_at: new Date(Date.now() - 1000 * 60 * 60 * 40).toISOString(),
@@ -41,7 +58,7 @@ const MOCK_LOTS = [
     category: 'Медоборудование',
     buyer: 'РНПЦ',
     region: 'Бухара',
-    budget_amount: 125000000,
+    budget_amount: 125_000_000,
     currency: 'UZS',
     bid_deadline_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     published_at: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString(),
@@ -49,14 +66,15 @@ const MOCK_LOTS = [
   },
 ];
 
-function json(data, status = 200) {
+// простой helper для JSON
+function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { 'content-type': 'application/json; charset=utf-8' },
   });
 }
 
-export default async function handler(req) {
+export default async function handler(req: Request) {
   try {
     const url = new URL(req.url);
     const q = (url.searchParams.get('q') || '').toLowerCase();
@@ -69,7 +87,7 @@ export default async function handler(req) {
     }
 
     return json({ ok: true, items });
-  } catch (e) {
-    return json({ ok: false, error: (e && e.message) || String(e) }, 500);
+  } catch (e: any) {
+    return json({ ok: false, error: e?.message || String(e) }, 500);
   }
 }
